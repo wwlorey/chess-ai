@@ -17,7 +17,7 @@ int tliddlmmwabp_max_value(State state, int alpha, int beta, std::vector<int> hi
 int tliddlmmwabp_min_value(State state, int alpha, int beta, std::vector<int> history);
 
 int time_limited_iterative_deepening_depth_limited_minimax_alpha_beta_pruning_quiescence_search_history_table(std::string initial_fen, bool max_player_color, std::vector<int> history, double time_remaining_ns); 
-int tliddlmabpqsht_max_value(State state, int alpha, int beta, std::vector<int> history, std::unordered_map<int, int> history_table);
-int tliddlmabpqsht_min_value(State state, int alpha, int beta, std::vector<int> history, std::unordered_map<int, int> history_table);
+int tliddlmabpqsht_max_value(State state, int alpha, int beta, std::vector<int> history, std::unordered_map<int, int> &history_table);
+int tliddlmabpqsht_min_value(State state, int alpha, int beta, std::vector<int> history, std::unordered_map<int, int> &history_table);
 
 #endif // SEARCH_HPP

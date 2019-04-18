@@ -225,7 +225,7 @@ int time_limited_iterative_deepening_depth_limited_minimax_with_alpha_beta_pruni
 }
 
 // Time-Limited Iterative-Deepening Depth-Limited MiniMax with alpha-beta pruning and Quiescence Search and History Table. Returns a utility value
-int tliddlmabpqsht_max_value(State state, int alpha, int beta, std::vector<int> history, std::unordered_map<int, int> history_table) {
+int tliddlmabpqsht_max_value(State state, int alpha, int beta, std::vector<int> history, std::unordered_map<int, int> &history_table) {
     int terminal_result = terminal_test(state, history);
 
     if (terminal_result != INTERNAL_NODE) {
@@ -234,15 +234,23 @@ int tliddlmabpqsht_max_value(State state, int alpha, int beta, std::vector<int> 
     }
     
     int value = MIN_VALUE;
+    int best_action = 0;
+    int new_value;
 
     state.actions = ht_sort(state.actions, history_table);
     
     for (auto &action : state.actions) {
         history.push_back(action);
-        value = std::max(value, tliddlmabpqsht_min_value(state.result(action), alpha, beta, history, history_table));
+        new_value = tliddlmabpqsht_min_value(state.result(action), alpha, beta, history, history_table);
         history.pop_back();
         
-        if (value >= beta)
+        // Get the new max value and best action
+        if (new_value > value) {
+            value = new_value;
+            best_action = action;
+        }
+
+        if (value >= beta) {
             // Fail high, prune
 
             // Update the history table
@@ -252,32 +260,47 @@ int tliddlmabpqsht_max_value(State state, int alpha, int beta, std::vector<int> 
                 history_table[action] = 1;
 
             return value;
+        }
         
         alpha = std::max(alpha, value);
     }
     
+    // Update the history table
+    if (ht_contains(history_table, best_action))
+        history_table[best_action]++;
+    else
+        history_table[best_action] = 1;
+
     return value;
 }
 
 // Time-Limited Iterative-Deepening Depth-Limited MiniMax with alpha-beta pruning and Quiescence Search and History Table. Returns a utility value
-int tliddlmabpqsht_min_value(State state, int alpha, int beta, std::vector<int> history, std::unordered_map<int, int> history_table) {
+int tliddlmabpqsht_min_value(State state, int alpha, int beta, std::vector<int> history, std::unordered_map<int, int> &history_table) {
     int terminal_result = terminal_test(state, history);
 
     if (terminal_result != INTERNAL_NODE) {
         // This is a terminal node
         return state.utility(terminal_result);
     }
-    
+
     int value = MAX_VALUE;
+    int best_action = 0;
+    int new_value;
     
     state.actions = ht_sort(state.actions, history_table);
 
     for (auto &action : state.actions) {
         history.push_back(action);
-        value = std::min(value, tliddlmabpqsht_max_value(state.result(action), alpha, beta, history, history_table));
+        new_value = tliddlmabpqsht_max_value(state.result(action), alpha, beta, history, history_table);
         history.pop_back();
 
-        if (value <= alpha)
+        // Get the new min value and best action
+        if (new_value < value) {
+            value = new_value;
+            best_action = action;
+        }
+
+        if (value <= alpha) {
             // Fail low, prune
 
             // Update the history table
@@ -287,9 +310,16 @@ int tliddlmabpqsht_min_value(State state, int alpha, int beta, std::vector<int> 
                 history_table[action] = 1;
 
             return value;
+        }
         
         beta = std::min(beta, value);
     }
+
+    // Update the history table
+    if (ht_contains(history_table, best_action))
+        history_table[best_action]++;
+    else
+        history_table[best_action] = 1;
     
     return value;
 }
