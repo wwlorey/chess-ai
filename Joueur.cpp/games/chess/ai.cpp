@@ -2,8 +2,13 @@
 // This is where you build your AI
 
 #include "ai.hpp"
-#include <vector>
+#include "engine/chessboard.hpp"
+#include "engine/search.hpp"
+#include "engine/util.hpp"
 #include <sstream>
+#include <stdlib.h>
+#include <time.h>
+#include <vector>
 
 /// <summary>
 /// std::string split implementation by using delimiter as a character.
@@ -86,8 +91,7 @@ namespace chess
 /// <returns>The name of your AI.</returns>
 std::string AI::get_name() const
 {
-    // REPLACE WITH YOUR TEAM NAME!
-    return "Chess C++ Player";
+    return "Doinque 👹";
 }
 
 /// <summary>
@@ -95,7 +99,14 @@ std::string AI::get_name() const
 /// </summary>
 void AI::start()
 {
-    // This is a good place to initialize any variables
+    srand(time(NULL));
+    this->history = {};
+    history.reserve(1000);
+    
+    if (this->get_setting("depth_limit") == "")
+        this->depth_limit = DEFAULT_MAX_DEPTH;
+    else
+        this->depth_limit = stoi(this->get_setting("depth_limit"));
 }
 
 /// <summary>
@@ -173,13 +184,17 @@ std::string AI::make_move()
      * * For more info about SAN: https://en.wikipedia.org/wiki/Algebraic_notation_(chess)
      * 
      *******************************************************************************************************/
+    
+    // Parse and save the enemy's last move (if it exists)
+    if (this->history.size()) {
+        this->history.push_back(server_san_to_move(this->game->history.back()));
+    }
+    
+    int move = time_limited_iterative_deepening_depth_limited_minimax_with_alpha_beta_pruning(this->game->fen, this->depth_limit, (this->player->color[0] == 'w') ? WHITE : BLACK, this->history, this->player->time_remaining);
+    
+    std::string move_str = get_move_str(move);
 
-    std::cout << prettyFEN(this->game->fen, this->player->color);
-
-    // This will only work if we are black move the pawn at b2 to b3.
-    // Otherwise we will lose.
-    // Your job is to code SOMETHING to parse the FEN string in some way to determine a valid move, in SAN format.
-    return "b3";
+    return move_str;
 }
 
 // You can add additional methods here for your AI to call

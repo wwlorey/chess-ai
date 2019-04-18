@@ -3,3 +3,13 @@
 # You would add the following line to this folder (without the #)
 # my_code/stuff.cpp
 # If your build fails after adding files, try to build again
+engine/chessboard.cpp
+engine/chessboard.hpp
+engine/constants.hpp
+engine/piecemoves.hpp
+engine/util.cpp
+engine/util.hpp
+engine/search.cpp
+engine/search.hpp
+engine/state.cpp
+engine/state.hpp

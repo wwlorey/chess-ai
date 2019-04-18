@@ -34,6 +34,9 @@ public:
     Player player;
 
     // You can add additional class variables here.
+    std::vector<int> history;
+    int depth_limit;
+
 
     /// <summary>
     /// This returns your AI's name to the game server.
