@@ -16,6 +16,7 @@ constexpr bool WHITE = 0;
 constexpr bool BLACK = 1;
 constexpr int MAX_NUM_MOVES = 100;
 #define ESTIMATED_REMAINING_MOVES 40
+#define MAX_QS_DEPTH 3
 
 constexpr U64 FILE_A = 0x0101010101010101;
 constexpr U64 FILE_B = 0x0202020202020202;

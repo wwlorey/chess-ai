@@ -1,8 +1,9 @@
 #include "state.hpp"
 
-State::State(ChessBoard board, int depth, bool max_player_color) {
+State::State(ChessBoard board, int depth, int qs_depth, bool max_player_color) {
     this->board = board;
     this->depth = depth;
+    this->qs_depth = qs_depth;
     this->max_player_color = max_player_color;
         
     if (this->depth)
@@ -14,7 +15,12 @@ State::State(ChessBoard board, int depth, bool max_player_color) {
 
 // Returns the resulting state after applying move to this->board
 State State::result(int move) {
-    return State(this->board.apply_move(move), this->depth - 1, this->max_player_color);
+    return State(this->board.apply_move(move), this->depth - 1, this->qs_depth, this->max_player_color);
+}
+
+// Returns the resulting state after applying move to this->board during a quiescent search
+State State::qs_result(int move) {
+    return State(this->board.apply_move(move), this->depth, this->qs_depth - 1, this->max_player_color);
 }
 
 // Returns the utility value (either actual or material advantage) of this state based on

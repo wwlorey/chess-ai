@@ -156,6 +156,11 @@ bool set_contains(std::set<U64> set, U64 item) {
     return (set.find(item) != set.end());
 }
 
+// Returns true if the move is contained in the history table
+bool ht_contains(std::unordered_map<int, int> ht, int move) {
+    return (ht.find(move) != ht.end());
+}
+
 std::vector<U64> split_bitboard(U64 bitboard) {
     std::vector<U64> set_bit_indices;
     int bit_index = 0;
@@ -930,4 +935,38 @@ int server_san_to_move(std::string san) {
     }
 
     return move | get_to_file_rank_mask(san, length - 2);
+}
+
+// Returns the actions sorted by history table value
+// There is room for efficiency improvements here
+std::vector<int> ht_sort(std::vector<int> actions, std::unordered_map<int, int> history_table) {
+    std::vector<int> sorted;
+    std::unordered_map<int, int> ht_entries;
+    bool inserted;
+
+    // Read off history table entries
+    for (auto &action : actions) {
+        if (ht_contains(history_table, action))
+            ht_entries[action] = history_table[action];
+        else
+            ht_entries[action] = 0;
+    }
+
+    // Sort the actions
+    for (auto &action : actions) {
+        inserted = false;
+
+        for(std::vector<int>::iterator it = sorted.begin(); it != sorted.end(); it++)    {
+            if (ht_entries[action] > ht_entries[*it]) {
+                sorted.insert(it, action);
+                inserted = true;
+                break;
+            }
+        }
+
+        if (!inserted)
+            sorted.push_back(action);
+    }
+
+    return sorted;
 }

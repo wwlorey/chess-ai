@@ -4,6 +4,7 @@
 #include "state.hpp"
 #include "util.hpp"
 #include <algorithm>
+#include <unordered_map>
 
 std::unordered_map<int, int> dummy_map = {{0,0}};
 
@@ -101,7 +102,7 @@ int iterative_deepening_depth_limited_minimax(std::string initial_fen, int max_d
 
     for (int depth_limit = 1; depth_limit <= max_depth_limit; depth_limit++) {
         print("Depth" + std::to_string(depth_limit));
-        action = depth_limited_minimax(State(ChessBoard(initial_fen), depth_limit, max_player_color), history);
+        action = depth_limited_minimax(State(ChessBoard(initial_fen), depth_limit, 0, max_player_color), history);
     }
 
     print();
@@ -178,7 +179,7 @@ int time_limited_iterative_deepening_depth_limited_minimax_with_alpha_beta_pruni
     while (true) {
         print("Depth" + std::to_string(depth_limit));
 
-        State state = State(ChessBoard(initial_fen), depth_limit, max_player_color);
+        State state = State(ChessBoard(initial_fen), depth_limit, 0, max_player_color);
         terminal_result = terminal_test(state, history);
 
         // Return this state's action with value found from the max value function
@@ -215,6 +216,146 @@ int time_limited_iterative_deepening_depth_limited_minimax_with_alpha_beta_pruni
         }
 
         prev_depth_best_action = best_action;
+        depth_limit++;
+    }
+    
+    print();
+    
+    return best_action;
+}
+
+// Time-Limited Iterative-Deepening Depth-Limited MiniMax with alpha-beta pruning and Quiescence Search and History Table. Returns a utility value
+int tliddlmabpqsht_max_value(State state, int alpha, int beta, std::vector<int> history, std::unordered_map<int, int> history_table) {
+    int terminal_result = terminal_test(state, history);
+
+    if (terminal_result != INTERNAL_NODE) {
+        // This is a terminal node
+        return state.utility(terminal_result);
+    }
+    
+    int value = MIN_VALUE;
+
+    state.actions = ht_sort(state.actions, history_table);
+    
+    for (auto &action : state.actions) {
+        history.push_back(action);
+        value = std::max(value, tliddlmabpqsht_min_value(state.result(action), alpha, beta, history, history_table));
+        history.pop_back();
+        
+        if (value >= beta)
+            // Fail high, prune
+
+            // Update the history table
+            if (ht_contains(history_table, action))
+                history_table[action]++;
+            else
+                history_table[action] = 1;
+
+            return value;
+        
+        alpha = std::max(alpha, value);
+    }
+    
+    return value;
+}
+
+// Time-Limited Iterative-Deepening Depth-Limited MiniMax with alpha-beta pruning and Quiescence Search and History Table. Returns a utility value
+int tliddlmabpqsht_min_value(State state, int alpha, int beta, std::vector<int> history, std::unordered_map<int, int> history_table) {
+    int terminal_result = terminal_test(state, history);
+
+    if (terminal_result != INTERNAL_NODE) {
+        // This is a terminal node
+        return state.utility(terminal_result);
+    }
+    
+    int value = MAX_VALUE;
+    
+    state.actions = ht_sort(state.actions, history_table);
+
+    for (auto &action : state.actions) {
+        history.push_back(action);
+        value = std::min(value, tliddlmabpqsht_max_value(state.result(action), alpha, beta, history, history_table));
+        history.pop_back();
+
+        if (value <= alpha)
+            // Fail low, prune
+
+            // Update the history table
+            if (ht_contains(history_table, action))
+                history_table[action]++;
+            else
+                history_table[action] = 1;
+
+            return value;
+        
+        beta = std::min(beta, value);
+    }
+    
+    return value;
+}
+
+// Returns an action
+int time_limited_iterative_deepening_depth_limited_minimax_alpha_beta_pruning_quiescence_search_history_table(std::string initial_fen, bool max_player_color, std::vector<int> history, double time_remaining_ns) {
+    int value = MIN_VALUE;
+    int best_value = MIN_VALUE;
+    int best_action = 0;
+    int prev_depth_best_action = 0;
+    int alpha;
+    int beta;
+    int terminal_result;
+    std::unordered_map<int, int> history_table;
+
+    // Determine allocated time for this move
+    double end_time = GET_TIME_NS() + (time_remaining_ns / ESTIMATED_REMAINING_MOVES);
+
+    int depth_limit = 1;
+    while (true) {
+        print("Depth" + std::to_string(depth_limit));
+
+        State state = State(ChessBoard(initial_fen), depth_limit, MAX_QS_DEPTH, max_player_color);
+        terminal_result = terminal_test(state, history);
+
+        // Return this state's action with value found from the max value function
+        if (terminal_result != INTERNAL_NODE) {
+            // The search cannot start in a terminal node
+            print("The search cannot start in a terminal node.");
+            return 0;
+        } else {
+            alpha = INIT_ALPHA;
+            beta  = INIT_BETA;
+
+            for (auto &action : state.actions) {
+                history.push_back(action);
+                value = tliddlmabpqsht_min_value(state.result(action), alpha, beta, history, history_table);
+                history.pop_back();
+
+                if (value > best_value) {
+                    best_value = value;
+                    best_action = action;
+                }
+                
+                if (value >= beta)
+                    // Fail high, prune
+                    return action;
+                
+                alpha = std::max(alpha, value);
+                
+                // Check for timeout
+                if (GET_TIME_NS() > (end_time)) {
+                    print("TIMEOUT");
+                    return prev_depth_best_action;
+                }
+            }
+        }
+
+        prev_depth_best_action = best_action;
+
+        // Update the history table
+        if (ht_contains(history_table, best_action))
+            history_table[best_action]++;
+        else
+            history_table[best_action] = 1;
+
         depth_limit++;
     }
     

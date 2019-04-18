@@ -28,6 +28,7 @@ void pretty_print(U64 bitboard);
 bool str_contains(std::string str1, char str2);
 bool map_contains(std::unordered_map<U64, U64> map, U64 item);
 bool set_contains(std::set<U64> set, U64 item);
+bool ht_contains(std::unordered_map<int, int> ht, int move);
 std::vector<U64> split_bitboard(U64 bitboard);
 
 std::unordered_map<std::string, U64> get_file_rank_to_piece_str(void);
@@ -75,5 +76,7 @@ int count_set_bits(U64 bits);
 
 int get_to_file_rank_mask(std::string san, int starting_index);
 int server_san_to_move(std::string san);
+
+std::vector<int> ht_sort(std::vector<int> actions, std::unordered_map<int, int> history_table);
 
 #endif // UTIL_HPP
