@@ -162,7 +162,7 @@ int tliddlmmwabp_min_value(State state, int alpha, int beta, std::vector<int> hi
 }
 
 // Returns an action
-int time_limited_iterative_deepening_depth_limited_minimax_with_alpha_beta_pruning(std::string initial_fen, int max_depth_limit, bool max_player_color, std::vector<int> history, double time_remaining_ns) {
+int time_limited_iterative_deepening_depth_limited_minimax_with_alpha_beta_pruning(std::string initial_fen, bool max_player_color, std::vector<int> history, double time_remaining_ns) {
     int value = MIN_VALUE;
     int best_value = MIN_VALUE;
     int best_action = 0;
@@ -174,7 +174,8 @@ int time_limited_iterative_deepening_depth_limited_minimax_with_alpha_beta_pruni
     // Determine allocated time for this move
     double end_time = GET_TIME_NS() + (time_remaining_ns / ESTIMATED_REMAINING_MOVES);
 
-    for (int depth_limit = 1; depth_limit <= max_depth_limit; depth_limit++) {
+    int depth_limit = 1;
+    while (true) {
         print("Depth" + std::to_string(depth_limit));
 
         State state = State(ChessBoard(initial_fen), depth_limit, max_player_color);
@@ -214,6 +215,7 @@ int time_limited_iterative_deepening_depth_limited_minimax_with_alpha_beta_pruni
         }
 
         prev_depth_best_action = best_action;
+        depth_limit++;
     }
     
     print();

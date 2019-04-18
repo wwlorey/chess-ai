@@ -10,7 +10,7 @@ int depth_limited_minimax(State initial_state, std::vector<int> history);
 int max_value(State state, std::vector<int> history);
 int min_value(State state, std::vector<int> history);
 int iterative_deepening_depth_limited_minimax(std::string initial_fen, int max_depth_limit, bool max_player_color, std::vector<int> history);
-int time_limited_iterative_deepening_depth_limited_minimax_with_alpha_beta_pruning(std::string initial_fen, int max_depth_limit, bool max_player_color, std::vector<int> history, double time_remaining_ns);
+int time_limited_iterative_deepening_depth_limited_minimax_with_alpha_beta_pruning(std::string initial_fen, bool max_player_color, std::vector<int> history, double time_remaining_ns);
 int tliddlmmwabp_max_value(State state, int alpha, int beta, std::vector<int> history);
 int tliddlmmwabp_min_value(State state, int alpha, int beta, std::vector<int> history);
 

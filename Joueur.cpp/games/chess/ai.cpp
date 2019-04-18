@@ -102,11 +102,6 @@ void AI::start()
     srand(time(NULL));
     this->history = {};
     history.reserve(1000);
-    
-    if (this->get_setting("depth_limit") == "")
-        this->depth_limit = DEFAULT_MAX_DEPTH;
-    else
-        this->depth_limit = stoi(this->get_setting("depth_limit"));
 }
 
 /// <summary>
@@ -190,7 +185,7 @@ std::string AI::make_move()
         this->history.push_back(server_san_to_move(this->game->history.back()));
     }
     
-    int move = time_limited_iterative_deepening_depth_limited_minimax_with_alpha_beta_pruning(this->game->fen, this->depth_limit, (this->player->color[0] == 'w') ? WHITE : BLACK, this->history, this->player->time_remaining);
+    int move = time_limited_iterative_deepening_depth_limited_minimax_with_alpha_beta_pruning(this->game->fen, (this->player->color[0] == 'w') ? WHITE : BLACK, this->history, this->player->time_remaining);
     
     std::string move_str = get_move_str(move);
 
