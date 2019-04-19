@@ -1,26 +1,34 @@
 #include "state.hpp"
 
-State::State(ChessBoard board, int depth, int qs_depth, bool max_player_color) {
+State::State(ChessBoard board, int depth, int qs_depth, bool max_player_color, bool is_quiescent) {
     this->board = board;
     this->depth = depth;
     this->qs_depth = qs_depth;
     this->max_player_color = max_player_color;
+    this->is_quiescent = is_quiescent;
         
-    if (this->depth)
+    if (this->depth || this->qs_depth) {
        this->board.actions(this->actions);
-    else
+    }
+    else {
         // Don't calculate actions if the depth limit is reached    
         this->actions = {0};
+    }
 }
 
 // Returns the resulting state after applying move to this->board
 State State::result(int move) {
-    return State(this->board.apply_move(move), this->depth - 1, this->qs_depth, this->max_player_color);
-}
+    int new_depth = this->depth;
+    int new_qs_depth = this->qs_depth;
 
-// Returns the resulting state after applying move to this->board during a quiescent search
-State State::qs_result(int move) {
-    return State(this->board.apply_move(move), this->depth, this->qs_depth - 1, this->max_player_color);
+    if (this->depth <= 0) {
+        // Only quiescent depth remains
+        new_qs_depth--;
+    } else {
+        new_depth--;
+    }
+
+    return State(this->board.apply_move(move), new_depth, new_qs_depth, this->max_player_color, !((move & ATTACK_MOVE_MASK) == ATTACK_MOVE_MASK));
 }
 
 // Returns the utility value (either actual or material advantage) of this state based on

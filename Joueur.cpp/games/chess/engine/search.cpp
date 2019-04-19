@@ -18,19 +18,29 @@ int terminal_test(State state, std::vector<int> history) {
         return LOSE_TERMINAL_NODE;
     }
 
-    if (state.board.half_moves == 100)
+    if (state.board.half_moves == 100) {
         // 100 half moves = 50 moves (50 move rule)
         return DRAW_TERMINAL_NODE;
+    }
 
-    if (state.board.half_moves == 8 && state.check_3_fold_rep(history))
+    if (state.board.half_moves == 8 && state.check_3_fold_rep(history)) {
         // 3-fold repetition
         return DRAW_TERMINAL_NODE;
+    }
 
-    if (state.insufficient_material())
+    if (state.insufficient_material()) {
         return DRAW_TERMINAL_NODE;
+    }
 
-    if (state.depth <= 0)
+    if (state.depth <= 0) {
+        if (!state.is_quiescent && state.qs_depth > 0) {
+            // Continue with quiescent search
+            return INTERNAL_NODE;
+        }
+
+        // No more regular depth or quescient depth to exhaust
         return DEPTH_LIMIT_REACHED;
+    }
 
     // This node is not a terminal node
     return INTERNAL_NODE;
