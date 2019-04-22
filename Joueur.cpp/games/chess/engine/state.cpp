@@ -18,6 +18,10 @@ State::State(ChessBoard board, int depth, int qs_depth, bool max_player_color, b
 
 // Returns the resulting state after applying move to this->board
 State State::result(int move) {
+    // This state is considered quiescent (in this case) if this move is not an attack move and not a pawn promotion move
+    // NOTE: This quiescent check can be improved upon
+    bool is_quiescent = !(move & ATTACK_MOVE_MASK) && !(move & PROMO_MOVE_MASK);
+
     int new_depth = this->depth;
     int new_qs_depth = this->qs_depth;
 
@@ -28,7 +32,7 @@ State State::result(int move) {
         new_depth--;
     }
 
-    return State(this->board.apply_move(move), new_depth, new_qs_depth, this->max_player_color, !((move & ATTACK_MOVE_MASK) == ATTACK_MOVE_MASK));
+    return State(this->board.apply_move(move), new_depth, new_qs_depth, this->max_player_color, is_quiescent);
 }
 
 // Returns the utility value (either actual or material advantage) of this state based on

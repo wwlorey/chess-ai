@@ -9,7 +9,7 @@
 std::unordered_map<int, int> dummy_map = {{0,0}};
 
 // Returns the terminal node type if state is a terminal node, INTERNAL_NODE otherwise.
-int terminal_test(State state, std::vector<int> history) {
+int terminal_test(State state, std::vector<int> move_history) {
     if (state.board.stalemate)
         return DRAW_TERMINAL_NODE;
 
@@ -23,7 +23,7 @@ int terminal_test(State state, std::vector<int> history) {
         return DRAW_TERMINAL_NODE;
     }
 
-    if (state.board.half_moves == 8 && state.check_3_fold_rep(history)) {
+    if (state.board.half_moves == 8 && state.check_3_fold_rep(move_history)) {
         // 3-fold repetition
         return DRAW_TERMINAL_NODE;
     }
@@ -38,7 +38,7 @@ int terminal_test(State state, std::vector<int> history) {
             return INTERNAL_NODE;
         }
 
-        // No more regular depth or quescient depth to exhaust
+        // No more regular depth or quiescent depth to exhaust
         return DEPTH_LIMIT_REACHED;
     }
 
@@ -234,9 +234,10 @@ int time_limited_iterative_deepening_depth_limited_minimax_with_alpha_beta_pruni
     return best_action;
 }
 
-// Time-Limited Iterative-Deepening Depth-Limited MiniMax with alpha-beta pruning and Quiescence Search and History Table. Returns a utility value
-int tliddlmabpqsht_max_value(State state, int alpha, int beta, std::vector<int> history, std::unordered_map<int, int> &history_table) {
-    int terminal_result = terminal_test(state, history);
+// Time-Limited Iterative-Deepening Depth-Limited MiniMax with alpha-beta pruning and Quiescence Search and History Table
+// Returns a utility value
+int tliddlmabpqsht_max_value(State state, int alpha, int beta, std::vector<int> move_history, std::unordered_map<int, int> &history_table) {
+    int terminal_result = terminal_test(state, move_history);
 
     if (terminal_result != INTERNAL_NODE) {
         // This is a terminal node
@@ -250,9 +251,9 @@ int tliddlmabpqsht_max_value(State state, int alpha, int beta, std::vector<int> 
     state.actions = ht_sort(state.actions, history_table);
     
     for (auto &action : state.actions) {
-        history.push_back(action);
-        new_value = tliddlmabpqsht_min_value(state.result(action), alpha, beta, history, history_table);
-        history.pop_back();
+        move_history.push_back(action);
+        new_value = tliddlmabpqsht_min_value(state.result(action), alpha, beta, move_history, history_table);
+        move_history.pop_back();
         
         // Get the new max value and best action
         if (new_value > value) {
@@ -284,9 +285,10 @@ int tliddlmabpqsht_max_value(State state, int alpha, int beta, std::vector<int> 
     return value;
 }
 
-// Time-Limited Iterative-Deepening Depth-Limited MiniMax with alpha-beta pruning and Quiescence Search and History Table. Returns a utility value
-int tliddlmabpqsht_min_value(State state, int alpha, int beta, std::vector<int> history, std::unordered_map<int, int> &history_table) {
-    int terminal_result = terminal_test(state, history);
+// Time-Limited Iterative-Deepening Depth-Limited MiniMax with alpha-beta pruning and Quiescence Search and History Table
+// Returns a utility value
+int tliddlmabpqsht_min_value(State state, int alpha, int beta, std::vector<int> move_history, std::unordered_map<int, int> &history_table) {
+    int terminal_result = terminal_test(state, move_history);
 
     if (terminal_result != INTERNAL_NODE) {
         // This is a terminal node
@@ -300,9 +302,9 @@ int tliddlmabpqsht_min_value(State state, int alpha, int beta, std::vector<int> 
     state.actions = ht_sort(state.actions, history_table);
 
     for (auto &action : state.actions) {
-        history.push_back(action);
-        new_value = tliddlmabpqsht_max_value(state.result(action), alpha, beta, history, history_table);
-        history.pop_back();
+        move_history.push_back(action);
+        new_value = tliddlmabpqsht_max_value(state.result(action), alpha, beta, move_history, history_table);
+        move_history.pop_back();
 
         // Get the new min value and best action
         if (new_value < value) {
@@ -335,7 +337,7 @@ int tliddlmabpqsht_min_value(State state, int alpha, int beta, std::vector<int> 
 }
 
 // Returns an action
-int time_limited_iterative_deepening_depth_limited_minimax_alpha_beta_pruning_quiescence_search_history_table(std::string initial_fen, bool max_player_color, std::vector<int> history, double time_remaining_ns) {
+int time_limited_iterative_deepening_depth_limited_minimax_alpha_beta_pruning_quiescence_search_history_table(std::string initial_fen, bool max_player_color, std::vector<int> move_history, double time_remaining_ns) {
     int value = MIN_VALUE;
     int best_value = MIN_VALUE;
     int best_action = 0;
@@ -352,8 +354,9 @@ int time_limited_iterative_deepening_depth_limited_minimax_alpha_beta_pruning_qu
     while (true) {
         print("Depth" + std::to_string(depth_limit));
 
+        // NOTE: Depth information (both for regular and quiescent depth) is encoded in the State class
         State state = State(ChessBoard(initial_fen), depth_limit, MAX_QS_DEPTH, max_player_color);
-        terminal_result = terminal_test(state, history);
+        terminal_result = terminal_test(state, move_history);
 
         // Return this state's action with value found from the max value function
         if (terminal_result != INTERNAL_NODE) {
@@ -365,9 +368,9 @@ int time_limited_iterative_deepening_depth_limited_minimax_alpha_beta_pruning_qu
             beta  = INIT_BETA;
 
             for (auto &action : state.actions) {
-                history.push_back(action);
-                value = tliddlmabpqsht_min_value(state.result(action), alpha, beta, history, history_table);
-                history.pop_back();
+                move_history.push_back(action);
+                value = tliddlmabpqsht_min_value(state.result(action), alpha, beta, move_history, history_table);
+                move_history.pop_back();
 
                 if (value > best_value) {
                     best_value = value;
@@ -399,7 +402,6 @@ int time_limited_iterative_deepening_depth_limited_minimax_alpha_beta_pruning_qu
         depth_limit++;
     }
     
-    print();
-    
+    // Just in case the while loop is broken out of
     return best_action;
 }
