@@ -1,3 +1,7 @@
+#### CS 5400 Artificial Intelligence | Bitboard-based chess AI
+
+#### Provided README:
+
 #################################
 #	Coding Standards	#
 #################################
